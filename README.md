@@ -1,3 +1,5 @@
+# Genetic Algorithms Lab: Jacob Opdahl && Mark Lehet
+
 # simple-search
 
 A Clojure implementation of a some simple heuristic search tools for the Spring, 2016, Evolutionary Computation and Artificial Intelligence class. Students will clone this and add functionality as the semester progresses.
