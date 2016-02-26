@@ -11,9 +11,11 @@
 ;;;   * :total-weight - the weight of the chosen items
 ;;;   * :total-value - the value of the chosen items
 
+;;; ****
 (defrecord Answer
   [instance choices total-weight total-value])
 
+;;; ****
 (defn included-items
   "Takes a sequences of items and a sequence of choices and
   returns the subsequence of items corresponding to the 1's
@@ -23,6 +25,7 @@
        (filter #(= 1 (second %))
                (map vector items choices))))
 
+;;; ****
 (defn make-answer
   [instance choices]
   (let [included (included-items (:items instance) choices)]
@@ -30,6 +33,7 @@
               (reduce + (map :weight included))
               (reduce + (map :value included)))))
 
+;;; ****
 (defn random-answer
   "Construct a random answer for the given instance of the
   knapsack problem."
@@ -38,11 +42,8 @@
                             #(rand-int 2))]
     (make-answer instance choices)))
 
-; (random-answer knapPI_13_20_1000_7)
-
 ;;; It might be cool to write a function that
 ;;; generates weighted proportions of 0's and 1's.
-
 (defn score
   "Takes the total-weight of the given answer unless it's over capacity,
    in which case we return 0."
@@ -52,6 +53,7 @@
     0
     (:total-value answer)))
 
+;;; ****
 (defn penalized-score
   "Takes the total-weight of the given answer unless it's over capacity,
    in which case we return the negative of the total weight."
@@ -80,8 +82,7 @@
                    (+ weight w)
                    (rest items))))))))
 
-; (lexi-score (random-answer knapPI_16_200_1000_1))
-
+;;; ****
 (defn add-score
   "Computes the score of an answer and inserts a new :score field
    to the given answer, returning the augmented answer."
@@ -94,8 +95,6 @@
          (map (partial add-score scorer)
               (repeatedly max-tries #(random-answer instance)))))
 
-; (random-search penalized-score knapPI_16_200_1000_1 10000)
-
 (defn mutate-choices
   [choices]
   (let [mutation-rate (/ 1 (count choices))]
@@ -106,8 +105,6 @@
   (make-answer (:instance answer)
                (mutate-choices (:choices answer))))
 
-; (def ra (random-answer knapPI_11_20_1000_1))
-; (mutate-answer ra)
 
 (defn hill-climber
   [mutator scorer instance max-tries]
@@ -121,11 +118,32 @@
           (recur new-answer (inc num-tries))
           (recur current-best (inc num-tries)))))))
 
-; (time (random-search score knapPI_16_200_1000_1 100000
-; ))
 
-; (time (hill-climber mutate-answer score knapPI_16_200_1000_1 100000
-; ))
+;;; ====================== MARK AND JACOB START HERE. =================
 
-; (time (hill-climber mutate-answer penalized-score knapPI_16_200_1000_1 100000
-; ))
+
+(defn choose-best
+  [population survivor-rate]
+  )
+
+;;; max-tries should be divisible by population-size, which should be divisible by survivor-rate
+(defn mutate-GA
+  [tweak scorer population-size survivor-rate instance max-tries]
+  (let [initial (repeatedly population-size #(add-score scorer (random-answer instance)))]
+    ))
+
+;;; Starting after population is made:
+;;; 1. Want to store the best of our initial population (function or something)
+;;; 2. determine the n = suvivor-rate best instances
+;;; 3. Start a new population
+;;; 4. Create population-size/survivor-rate tweaked answers for each in best
+;;;     Note: that's the new population
+;;; 5. Then repeat this max-tries
+
+
+
+
+;;; -=-=-=-=-=-=-=-=-=-=- RUN TESTING OF FUNCTIONS HERE. -=-=-=-=-=-=-=-
+
+;;; Testing making our population
+;;;(repeatedly 5 #(add-score penalized-score (random-answer knapPI_11_20_1000_4)))
