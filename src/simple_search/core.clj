@@ -235,10 +235,7 @@
   [parent-a parent-b]
   (let [chromosome-a (:choices parent-a)
         chromosome-b (:choices parent-b)]
-    (for [x chromosome-a
-          y chromosome-b] (if (> (rand-int 100) 50)
-                            y
-                            x))))
+    (map (fn [x y] (if (> (rand-int 100) 50) x y)) chromosome-a chromosome-b)))
 
 
 ;;; Selection algorithm will be hard-coded as tournament-selection
@@ -273,3 +270,5 @@
 
 ;;; Testicles uniform-crossover
 ;(uniform-crossover {:choices [0 1 1 1]} {:choices [1 0 0 0]})
+;(map (fn [x y] (if (> (rand-int 100) 50) x y)) [0 1 2 3] ["a" "b" "c" "d"])
+
