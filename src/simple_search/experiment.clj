@@ -5,7 +5,8 @@
         simple-search.knapsack-examples.knapPI_16_20_1000
         simple-search.knapsack-examples.knapPI_11_200_1000
         simple-search.knapsack-examples.knapPI_13_200_1000
-        simple-search.knapsack-examples.knapPI_16_200_1000))
+        simple-search.knapsack-examples.knapPI_16_200_1000
+        simple-search.knapsack-examples.knapPI_16_1000_1000))
 
 (defn run-experiment
   [searchers problems num-replications max-evals]
@@ -59,13 +60,17 @@
   (ns simple-search.experiment)
   (print-experimental-results
    (run-experiment [(with-meta
-                      (partial core/hill-climber core/mutate-answer core/score)
-                      {:label "hill_climber_cliff_score"})
+                      (partial core/random-search core/score)
+                      {:label "random_search"})
                     (with-meta
-                      (partial core/hill-climber core/mutate-answer core/penalized-score)
-                      {:label "hill_climber_penalized_score"})
-                    (with-meta (partial core/random-search core/score)
-                      {:label "random_search"})]
+                      (partial core/mutate-GA core/remove-then-random-replace core/penalized-score 100 25)
+                      {:label "mutate_pop-100_survivor-25"})
+                    (with-meta
+                      (partial core/crossover-GA core/uniform-crossover core/remove-then-random-replace 25 core/penalized-score 100)
+                      {:label "uniform_pop-100_tourn-25"})
+                    (with-meta
+                      (partial core/crossover-GA core/two-point-crossover core/remove-then-random-replace 25 core/penalized-score 100)
+                      {:label "two-point_pop-100_tourn-25"})]
                    (map get-labelled-problem
                         ["knapPI_11_20_1000_4" "knapPI_13_20_1000_4" "knapPI_16_20_1000_4"
                          "knapPI_11_200_1000_4" "knapPI_13_200_1000_4" "knapPI_16_200_1000_4"])
