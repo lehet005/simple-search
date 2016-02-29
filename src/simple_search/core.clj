@@ -159,10 +159,10 @@
 ;; This will be our initial tweak function.
 (defn remove-then-random-replace
   "Takes an answer. If the answer is over capacity, removes items until it is not. If it is not, removes a random and add a random."
-  [answer]
+  [answer scorer]
   (if (> (:total-weight answer) (:capacity (:instance answer)))
-    (remove-then-random-replace (reconstruct-answer (:instance answer) (find-and-remove-choice (:choices answer))))
-    (add-score penalized-score (reconstruct-answer (:instance answer)
+    (remove-then-random-replace (reconstruct-answer (:instance answer) (find-and-remove-choice (:choices answer))) scorer)
+    (add-score scorer (reconstruct-answer (:instance answer)
                         (find-and-add-choice
                          (find-and-remove-choice (:choices answer)))))))
 
@@ -189,8 +189,8 @@
 
 (defn breeding
   "Takes a population, and generates children-num answers for each individual using the provided tweak function."
-  [population children-num tweak]
-  (flatten (for [x population] (repeatedly children-num #(tweak x)))))
+  [population children-num tweak scorer]
+  (flatten (for [x population] (repeatedly children-num #(tweak x scorer)))))
 
 ;;; Starting after population is made:
 ;;; 1. Check all in pop for seeing which is best. Update best answer.
@@ -209,10 +209,8 @@
            population initial
            loop-times (/ max-tries population-size)]
       (if (> loop-times 0)
-        (recur (assess-fitness best population) (breeding (truncation-selection population survivor-rate) (/ population-size survivor-rate) tweak) (dec loop-times))
+        (recur (assess-fitness best population) (breeding (truncation-selection population survivor-rate) (/ population-size survivor-rate) tweak scorer) (dec loop-times))
         best))))
-
-;;; NOTE TO SELVES - We hard-coded in the scorer to the tweak fxn, but not the overall. Could use some refactoring.
 
 
 
@@ -231,7 +229,8 @@
     (assess-fitness (first subset) subset)))
 
 
-;;; Probability for determining parent will be hard-coded
+;;; Probability for determining parent will be hard-coded so that the
+;;; function can be used in our general crossover-GA function.
 (defn uniform-crossover
   "Takes two parent answers and returns a child answer using uniform crossover. Randomly selects which parent to take
   an allele from for each gene in a chromosome."
@@ -265,10 +264,12 @@
                                  (first (split-at point1 chromosome-a)))))))
     )))
 
-;;; Selection algorithm will be hard-coded as tournament-selection
-
+;;; Selection algorithm will be hard-coded as tournament-selection such that tournment size can be specified.
 (defn crossover-GA
-  ""
+  "max-tries should be divisible by population-size.
+  Performs a Genetic Algorithm to search for a best solution to a knapsack problem.
+  Specifically, creates new populations from an initial population using a specified
+  crossover function and looks for a best answer."
   [crossover-fn tweak tourn-size scorer population-size instance max-tries]
   (let [initial (repeatedly population-size #(add-score scorer (random-answer instance)))]
     (loop [best (first initial)
@@ -279,7 +280,8 @@
                (repeatedly population-size
                          #(tweak (crossover-fn (tournament-selection population tourn-size)
                                                (tournament-selection population tourn-size)
-                                               scorer)))
+                                               scorer)
+                                 scorer))
                (dec loop-times))
         best))))
 
@@ -295,10 +297,10 @@
 ;(assess-fitness {:score 10} '({:score 20} {:score 100} {:score 11}))
 
 ;;; Testing breeding
-;(breeding (repeatedly 5 #(add-score penalized-score (random-answer knapPI_11_20_1000_4))) 2 remove-then-random-replace)
+;(breeding (repeatedly 5 #(add-score penalized-score (random-answer knapPI_11_20_1000_4))) 2 remove-then-random-replace penalized-score)
 
 ;;; Test tweak
-;(remove-then-random-replace (random-answer knapPI_11_20_1000_4))
+;(remove-then-random-replace (random-answer knapPI_11_20_1000_4) penalized-score)
 
 ;;; Testing mutate-GA
 ;(mutate-GA remove-then-random-replace penalized-score 100 50 knapPI_11_1000_1000_4 1000)
