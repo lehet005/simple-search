@@ -121,19 +121,31 @@
 
 ;;; ====================== MARK AND JACOB START HERE. =================
 
+(defn assess-fitness
+  "Takes a population and a best answer and returns the best answer between both of them."
+  [best population]
+    (if (= (count population) 0)
+      best
+      (assess-fitness (if (> (:score best) (:score (first population)))
+                        best
+                        (first population))
+                      (rest population))))
 
-(defn choose-best
+(defn truncation-selection
   "Takes a population consisting of a list of answers and returns the survivor-rate best of them."
   [population survivor-rate]
     (take survivor-rate (sort-by :score > population)))
 
 ;;; max-tries should be divisible by population-size, which should be divisible by survivor-rate
 (defn mutate-GA
+  "max-tries should be divisible by population-size, which should be divisible by survivor-rate
+  Performs a Genetic algorithm using pure mutations of individuals in a population."
   [tweak scorer population-size survivor-rate instance max-tries]
   (let [initial (repeatedly population-size #(add-score scorer (random-answer instance)))]
     ))
 
 ;;; Starting after population is made:
+;;; 0. Check all in pop for seeing which is best. Update best answer.
 ;;; 1. Want to store the best of our initial population (function or something)
 ;;; 2. determine the n = suvivor-rate best instances
 ;;; 3. Start a new population
@@ -148,3 +160,6 @@
 
 ;;; Testing making our population and sorting it and getting best from it.
 ;(take 2 (sort-by :score > (repeatedly 5 #(add-score penalized-score (random-answer knapPI_11_20_1000_4)))))
+
+;;; Testing that assess fitness does the thing.
+;(assess-fitness {:score 10} '({:score 20} {:score 100} {:score 11}))
