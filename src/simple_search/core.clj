@@ -2,7 +2,9 @@
   (:use simple-search.knapsack-examples.knapPI_11_20_1000
         simple-search.knapsack-examples.knapPI_13_20_1000
         simple-search.knapsack-examples.knapPI_16_20_1000
-        simple-search.knapsack-examples.knapPI_16_200_1000))
+        simple-search.knapsack-examples.knapPI_11_1000_1000
+        simple-search.knapsack-examples.knapPI_13_1000_1000
+        simple-search.knapsack-examples.knapPI_16_1000_1000))
 
 ;;; An answer will be a map with (at least) four entries:
 ;;;   * :instance
@@ -184,25 +186,30 @@
     (take survivor-rate (sort-by :score > population)))
 
 (defn breeding
+  "Takes a population, and generates children-num answers for each individual using the provided tweak function."
   [population children-num tweak]
   (flatten (for [x population] (repeatedly children-num #(tweak x)))))
 
+;;; Starting after population is made:
+;;; 1. Check all in pop for seeing which is best. Update best answer.
+;;; 2. determine the n = suvivor-rate best instances
+;;; 3. Start a new population
+;;; 4. Create population-size/survivor-rate tweaked answers for each in best
+;;;     Note: that's the new population
+;;; 5. Then repeat this max-tries
 ;;; mu,lambda -> surv,pop
 (defn mutate-GA
   "max-tries should be divisible by population-size, which should be divisible by survivor-rate
   Performs a Genetic algorithm using pure mutations of individuals in a population."
   [tweak scorer population-size survivor-rate instance max-tries]
   (let [initial (repeatedly population-size #(add-score scorer (random-answer instance)))]
-    ))
+    (loop [best (first initial)
+           population initial
+           loop-times (/ max-tries population-size)]
+      (if (> loop-times 0)
+        (recur (assess-fitness best population) (breeding (truncation-selection population survivor-rate) (/ population-size survivor-rate) tweak) (dec loop-times))
+        best))))
 
-;;; Starting after population is made:
-;;; 0. Check all in pop for seeing which is best. Update best answer.
-;;; 1. Want to store the best of our initial population (function or something)
-;;; 2. determine the n = suvivor-rate best instances
-;;; 3. Start a new population
-;;; 4. Create population-size/survivor-rate tweaked answers for each in best
-;;;     Note: that's the new population
-;;; 5. Then repeat this max-tries
 
 
 
@@ -220,3 +227,6 @@
 
 ;;; Test tweak
 ;(remove-then-random-replace (random-answer knapPI_11_20_1000_4))
+
+;;; Testing mutate-GA
+;(mutate-GA remove-then-random-replace penalized-score 100 50 knapPI_11_1000_1000_4 1000)
