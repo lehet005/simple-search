@@ -118,6 +118,53 @@
           (recur new-answer (inc num-tries))
           (recur current-best (inc num-tries)))))))
 
+;;; ..................... TWEAK FUNCTION FROM JACOB AND PETER .........
+;;; NOTE: Loop/recur in this area comes from when we were working on hill-climbing.
+
+(defn find-and-remove-choice
+  "Takes a list of choices and returns the same list with one choice removed randomly."
+  [choices]
+  (def choicesVector (vec choices))
+  (loop [rand #(rand-int (count choicesVector))]
+    (if (= (get choicesVector rand) 1)
+      (reverse (into '() (assoc choicesVector rand 0)))
+      (recur (#(rand-int (count choicesVector))))
+      )))
+
+
+;; If time allows, combine this and find-and-remove-choice.
+(defn find-and-add-choice
+  "Takes a list of choices and returns the same list with one choice added randomly."
+  [choices]
+  (def choicesVector (vec choices))
+  (loop [rand #(rand-int (count choicesVector))]
+    (if (= (get choicesVector rand) 0)
+      (reverse (into '() (assoc choicesVector rand 1)))
+      (recur (#(rand-int (count choicesVector))))
+      )))
+
+
+(defn reconstruct-answer
+  "takes an instance and a set list of choices and returns the new answer."
+  [instance choices]
+  (let [included (included-items (instance :items) choices)]
+  {:instance instance
+   :choices choices
+   :total-weight (reduce + (map :weight included))
+   :total-value (reduce + (map :value included))}))
+
+
+;; This will be our initial tweak function.
+(defn remove-then-random-replace
+  "Takes an answer. If the answer is over capacity, removes items until it is not. If it is not, removes a random and add a random."
+  [answer]
+  (if (> (:total-weight answer) (:capacity (:instance answer)))
+    (remove-then-random-replace (reconstruct-answer (:instance answer) (find-and-remove-choice (:choices answer))))
+    (add-score penalized-score (reconstruct-answer (:instance answer)
+                        (find-and-add-choice
+                         (find-and-remove-choice (:choices answer)))))))
+
+
 
 ;;; ====================== MARK AND JACOB START HERE. =================
 
@@ -136,7 +183,11 @@
   [population survivor-rate]
     (take survivor-rate (sort-by :score > population)))
 
-;;; max-tries should be divisible by population-size, which should be divisible by survivor-rate
+(defn breeding
+  [population children-num tweak]
+  (flatten (for [x population] (repeatedly children-num #(tweak x)))))
+
+;;; mu,lambda -> surv,pop
 (defn mutate-GA
   "max-tries should be divisible by population-size, which should be divisible by survivor-rate
   Performs a Genetic algorithm using pure mutations of individuals in a population."
@@ -163,3 +214,9 @@
 
 ;;; Testing that assess fitness does the thing.
 ;(assess-fitness {:score 10} '({:score 20} {:score 100} {:score 11}))
+
+;;; Testing breeding
+;(breeding (repeatedly 5 #(add-score penalized-score (random-answer knapPI_11_20_1000_4))) 2 remove-then-random-replace)
+
+;;; Test tweak
+;(remove-then-random-replace (random-answer knapPI_11_20_1000_4))
