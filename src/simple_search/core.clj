@@ -168,8 +168,10 @@
 
 
 
+
 ;;; ====================== MARK AND JACOB START HERE. =================
 
+;;; --------------------- Mutation-Based GA --------------------------
 (defn assess-fitness
   "Takes a population and a best answer and returns the best answer between both of them."
   [best population]
@@ -210,7 +212,27 @@
         (recur (assess-fitness best population) (breeding (truncation-selection population survivor-rate) (/ population-size survivor-rate) tweak) (dec loop-times))
         best))))
 
+;;; NOTE TO SELVES - We hard-coded in the scorer to the tweak fxn, but not the overall. Could use some refactoring.
 
+
+
+
+;;; --------------------- Crossover GAs --------------------------
+
+(defn random-subset
+  [population size]
+  (take size (shuffle population)))
+
+(defn tournament-selection
+  [population tourn-size]
+  (let [subset (random-subset population tourn-size)]
+    (assess-fitness (first subset) subset)))
+
+
+(defn crossover-GA
+  ""
+  [crossover-fn tweak tourn-size scorer population-size instance max-tries]
+  )
 
 
 
@@ -230,3 +252,7 @@
 
 ;;; Testing mutate-GA
 ;(mutate-GA remove-then-random-replace penalized-score 100 50 knapPI_11_1000_1000_4 1000)
+
+;;; Test tournament-selection and random-subset
+(random-subset '({:score 20} {:score 100} {:score 11} {:score 56} {:score 34} {:score 1} {:score 1} {:score 22}) 4)
+(tournament-selection '({:score 20} {:score 100} {:score 11} {:score 56} {:score 34} {:score 1} {:score 1} {:score 22}) 4)
