@@ -220,23 +220,50 @@
 ;;; --------------------- Crossover GAs --------------------------
 
 (defn random-subset
+  "Returns a subset of the population determined by size."
   [population size]
   (take size (shuffle population)))
 
 (defn tournament-selection
+  "Uses tournament selection to pick a subset of a population and then chooses the best answer among the subset."
   [population tourn-size]
   (let [subset (random-subset population tourn-size)]
     (assess-fitness (first subset) subset)))
 
 
 ;;; Probability for determining parent will be hard-coded
-;;; Needs work, check test for the issue... should be obvious i hope...
 (defn uniform-crossover
-  [parent-a parent-b]
+  "Takes two parent answers and returns a child answer using uniform crossover. Randomly selects which parent to take
+  an allele from for each gene in a chromosome."
+  [parent-a parent-b scorer]
   (let [chromosome-a (:choices parent-a)
         chromosome-b (:choices parent-b)]
-    (map (fn [x y] (if (> (rand-int 100) 50) x y)) chromosome-a chromosome-b)))
+    (add-score scorer (reconstruct-answer (:instance parent-a) (vec (map (fn [x y] (if (> (rand-int 100) 50) x y)) chromosome-a chromosome-b))))))
 
+(defn two-point-crossover
+  "Performs two-point crossover using parent a for the 'outside' alleles, and parent b
+  for the 'inside' alleles. If the indices for boundaries are equal, parent a will be returned."
+  [parent-a parent-b scorer]
+  (let [chromosome-a (:choices parent-a)
+        chromosome-b (:choices parent-b)
+        point1 (rand-int (inc (count parent-a)))
+        point2 (rand-int (inc (count parent-b)))]
+    (if (> point1 point2)
+      (add-score scorer
+                 (reconstruct-answer
+                  (:instance parent-a)
+                  (vec (flatten (conj
+                                 (last (split-at point1 chromosome-a))
+                                 (last (split-at point2 (first (split-at point1 chromosome-b))))
+                                 (first (split-at point2 chromosome-a)))))))
+      (add-score scorer
+                 (reconstruct-answer
+                  (:instance parent-a)
+                  (vec (flatten (conj
+                                 (last (split-at point2 chromosome-a))
+                                 (last (split-at point1 (first (split-at point2 chromosome-b))))
+                                 (first (split-at point1 chromosome-a)))))))
+    )))
 
 ;;; Selection algorithm will be hard-coded as tournament-selection
 
@@ -269,6 +296,13 @@
 ;(tournament-selection '({:score 20} {:score 100} {:score 11} {:score 56} {:score 34} {:score 1} {:score 1} {:score 22}) 4)
 
 ;;; Testicles uniform-crossover
-;(uniform-crossover {:choices [0 1 1 1]} {:choices [1 0 0 0]})
-;(map (fn [x y] (if (> (rand-int 100) 50) x y)) [0 1 2 3] ["a" "b" "c" "d"])
+;(uniform-crossover (random-answer knapPI_11_20_1000_4) (random-answer knapPI_11_20_1000_4) penalized-score)
+;(vec (map (fn [x y] (if (> (rand-int 100) 50) x y)) [0 1 2 3] ["a" "b" "c" "d"]))
 
+;;; Figuring out two-point crossover.
+;;; [0 1 0 1 0] [1 0 1 0 1] -> 2 4 -> [0 1 1 0 0]
+;(split-at 4 [1 2 3 4 5])
+;(vec (flatten (conj (last (split-at 3 [0 1 0 1 0])) (last (split-at 3 (first (split-at 3 [1 0 1 0 1])))) (first (split-at 3 [0 1 0 1 0])))))
+
+;;; Testing two-point crossover.
+;(two-point-crossover (random-answer knapPI_11_20_1000_4) (random-answer knapPI_11_20_1000_4) penalized-score)
