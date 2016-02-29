@@ -270,7 +270,19 @@
 (defn crossover-GA
   ""
   [crossover-fn tweak tourn-size scorer population-size instance max-tries]
-  )
+  (let [initial (repeatedly population-size #(add-score scorer (random-answer instance)))]
+    (loop [best (first initial)
+           population initial
+           loop-times (/ max-tries population-size)]
+      (if (> loop-times 0)
+        (recur (assess-fitness best population)
+               (repeatedly population-size
+                         #(tweak (crossover-fn (tournament-selection population tourn-size)
+                                               (tournament-selection population tourn-size)
+                                               scorer)))
+               (dec loop-times))
+        best))))
+
 
 
 
@@ -306,3 +318,7 @@
 
 ;;; Testing two-point crossover.
 ;(two-point-crossover (random-answer knapPI_11_20_1000_4) (random-answer knapPI_11_20_1000_4) penalized-score)
+
+;;; Testing crossover-GA.
+;(crossover-GA uniform-crossover remove-then-random-replace 10 penalized-score 100 knapPI_11_1000_1000_4 10000)
+;(crossover-GA two-point-crossover remove-then-random-replace 10 penalized-score 100 knapPI_11_1000_1000_4 10000)
