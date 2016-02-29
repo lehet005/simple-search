@@ -123,8 +123,9 @@
 
 
 (defn choose-best
+  "Takes a population consisting of a list of answers and returns the survivor-rate best of them."
   [population survivor-rate]
-  )
+    (take survivor-rate (sort-by :score > population)))
 
 ;;; max-tries should be divisible by population-size, which should be divisible by survivor-rate
 (defn mutate-GA
@@ -145,5 +146,5 @@
 
 ;;; -=-=-=-=-=-=-=-=-=-=- RUN TESTING OF FUNCTIONS HERE. -=-=-=-=-=-=-=-
 
-;;; Testing making our population
-;;;(repeatedly 5 #(add-score penalized-score (random-answer knapPI_11_20_1000_4)))
+;;; Testing making our population and sorting it and getting best from it.
+;(take 2 (sort-by :score > (repeatedly 5 #(add-score penalized-score (random-answer knapPI_11_20_1000_4)))))
