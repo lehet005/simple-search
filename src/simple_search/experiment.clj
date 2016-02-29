@@ -60,7 +60,7 @@
   (ns simple-search.experiment)
   (print-experimental-results
    (run-experiment [(with-meta
-                      (partial core/random-search core/score)
+                      (partial core/random-search core/penalized-score)
                       {:label "random_search"})
                     (with-meta
                       (partial core/mutate-GA core/remove-then-random-replace core/penalized-score 100 25)
