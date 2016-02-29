@@ -229,6 +229,20 @@
     (assess-fitness (first subset) subset)))
 
 
+;;; Probability for determining parent will be hard-coded
+;;; Needs work, check test for the issue... should be obvious i hope...
+(defn uniform-crossover
+  [parent-a parent-b]
+  (let [chromosome-a (:choices parent-a)
+        chromosome-b (:choices parent-b)]
+    (for [x chromosome-a
+          y chromosome-b] (if (> (rand-int 100) 50)
+                            y
+                            x))))
+
+
+;;; Selection algorithm will be hard-coded as tournament-selection
+
 (defn crossover-GA
   ""
   [crossover-fn tweak tourn-size scorer population-size instance max-tries]
@@ -254,5 +268,8 @@
 ;(mutate-GA remove-then-random-replace penalized-score 100 50 knapPI_11_1000_1000_4 1000)
 
 ;;; Test tournament-selection and random-subset
-(random-subset '({:score 20} {:score 100} {:score 11} {:score 56} {:score 34} {:score 1} {:score 1} {:score 22}) 4)
-(tournament-selection '({:score 20} {:score 100} {:score 11} {:score 56} {:score 34} {:score 1} {:score 1} {:score 22}) 4)
+;(random-subset '({:score 20} {:score 100} {:score 11} {:score 56} {:score 34} {:score 1} {:score 1} {:score 22}) 4)
+;(tournament-selection '({:score 20} {:score 100} {:score 11} {:score 56} {:score 34} {:score 1} {:score 1} {:score 22}) 4)
+
+;;; Testicles uniform-crossover
+;(uniform-crossover {:choices [0 1 1 1]} {:choices [1 0 0 0]})
