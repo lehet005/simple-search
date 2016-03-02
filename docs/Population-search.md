@@ -98,7 +98,9 @@ Our uniform-crossover function works as follows:
 2. For each respective gene in both parents, randomly choose one parent's allele in that location to fill the child's gene.
 3. Construct a new answer using the new child chromosome.
 
-Note: We use a 50% probability for determining which parent to take the allele value from.
+Note 1: We use a 50% probability for determining which parent to take the allele value from.
+
+Note 2: We are using terminology introduced in Essentials of Metaheuristics for describing the algorithm.
 
 This is pretty simple. Not a whole lot complicated going on here. The args for the function are as follows:
 
@@ -106,4 +108,13 @@ This is pretty simple. Not a whole lot complicated going on here. The args for t
 * parent-b - The second answer to be a parent.
 * scorer - Scoring function to be used when constructing the child answer.
 
+Note: The arguments above are the same for both crossover functions.
+
 ## Two-Point Crossover
+
+Our two-point-crossover function works as follows:
+
+1. Take the chromosomes (bit vectors) from the parents.
+2. Selects two random points from 0 to L, where L is the length of the chromosome.
+3. Constructs a new chromosome for a child using genes before the first point and after the second point from parent-a and genes between the two points from parent-b.
+4. Construct a new answer using the new child chromosome.
