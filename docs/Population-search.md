@@ -53,4 +53,44 @@ Selection in our algorithm is performed through truncation selection, as seen in
 Breeding and population reassembly occur together.  For breeding, each of the survivors is tweaked to generate populations-size/survivor-rate new individuals, which are then reassembled into a new population.
 
 
-# 
+# Crossover GAs
+
+As instructed, we made two population-based GAs that use crossover with parents to create subsequent generations. One uses Uniform Crossover, the other uses Two-Point Crossover (these are both the breeding portion of the overall GA general proccess). Since this is the only thing that would be different between the two GAs, we decided early on to make a general function, crossover-GA, that takes the crossover function to be used as an argument. This algorithm closely follows the general Genetic Algorithm described in Essentials of Metaheuristics on page 36. This overall algorithm works as follows:
+
+Note: This is the same as mutate-GA up until, and including, 2.1.
+
+1. Create an initial population with population-size individuals.
+2. Repeatedly do the following:
+ 1. Check for best answer in population, and update as appropriate. 
+ 2. Repeatedly for population-size number of times:
+  * - Use tournament-selection twice to determine two parents.
+  * - Use the crossover function to get a *single* child.
+  * - Apply the tweak/mutation function to the child.
+  * - Add the child to the new population.
+ 3. Use this new population to repeat max-tries/population-size times.
+3. Return best result at end.
+
+The function crossover-GA takes the following arguments:
+* crossover-fn - The crossover function to use
+* tweak - Our mutation function (see above)
+* tourn-size - The size of the subset of the population to hold a tournament during tournament selection
+* scorer - A function that adds a score field to an answer
+* population-size - The number of individuals to be considered in each generation
+* instance - Problem instance to be solved
+* max-tries - The maximum amount of mutations to occur
+
+Note: max-tries should be divisible by population-size.
+
+Fitness assesment in our algorithm occurs during phase 2.1.  During this, the current best is checked against the current population to see if there is a new best.
+
+Selection for parents in our algorithm is performed using tournament-selection as described in Essentials of Metaheuristics on page 45. For this, a tournament-size subset of the population is randomly selected. Then, the individual with the highest score from that subset is chosen as a parent.
+
+Breeding occurs through crossover of the parents chosen during selection. This could be done using either of our crossover function, which are described below. One important design decision to note here:  Essentials of Metaheuristics describes these algorithms as taking in two parents, and returning *two* children. We decided to only have them return a single child. One, this was easier; two, this exploration than exploitation. We also examined these techniques in class as only returning single children, so we followed that approach. Last, both functions take in full answers as parents, and return a full answer as a child.
+
+For population reassembly, the new child is tweaked/mutated and then added to the population, which will be used in the next generation. No parents are added directly to the new generation.
+
+
+## Uniform Crossover
+
+
+## Two-Point Crossover
