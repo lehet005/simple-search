@@ -85,12 +85,25 @@ Fitness assesment in our algorithm occurs during phase 2.1.  During this, the cu
 
 Selection for parents in our algorithm is performed using tournament-selection as described in Essentials of Metaheuristics on page 45. For this, a tournament-size subset of the population is randomly selected. Then, the individual with the highest score from that subset is chosen as a parent.
 
-Breeding occurs through crossover of the parents chosen during selection. This could be done using either of our crossover function, which are described below. One important design decision to note here:  Essentials of Metaheuristics describes these algorithms as taking in two parents, and returning *two* children. We decided to only have them return a single child. One, this was easier; two, this exploration than exploitation. We also examined these techniques in class as only returning single children, so we followed that approach. Last, both functions take in full answers as parents, and return a full answer as a child.
+Breeding occurs through crossover of the parents chosen during selection. This could be done using either of our crossover function, which are described below. One important design decision to note here:  Essentials of Metaheuristics describes these algorithms as taking in two parents, and returning *two* children. We decided to only have them return a single child. One, this was easier; two, this emphasizes exploration over exploitation. We also examined these techniques in class as only returning single children, so we followed that approach. Last, both functions take in full answers as parents, and return a full answer as a child.
 
 For population reassembly, the new child is tweaked/mutated and then added to the population, which will be used in the next generation. No parents are added directly to the new generation.
 
 
 ## Uniform Crossover
 
+Our uniform-crossover function works as follows:
+
+1. Take the chromosomes (bit vectors) from the parents.
+2. For each respective gene in both parents, randomly choose one parent's allele in that location to fill the child's gene.
+3. Construct a new answer using the new child chromosome.
+
+Note: We use a 50% probability for determining which parent to take the allele value from.
+
+This is pretty simple. Not a whole lot complicated going on here. The args for the function are as follows:
+
+* parent-a - The first answer to be a parent.
+* parent-b - The second answer to be a parent.
+* scorer - Scoring function to be used when constructing the child answer.
 
 ## Two-Point Crossover
