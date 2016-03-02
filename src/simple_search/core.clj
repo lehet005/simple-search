@@ -245,8 +245,8 @@
   [parent-a parent-b scorer]
   (let [chromosome-a (:choices parent-a)
         chromosome-b (:choices parent-b)
-        point1 (rand-int (inc (count parent-a)))
-        point2 (rand-int (inc (count parent-b)))]
+        point1 (rand-int (inc (count (:choices parent-a))))
+        point2 (rand-int (inc (count (:choices parent-b))))]
     (if (> point1 point2)
       (add-score scorer
                  (reconstruct-answer
