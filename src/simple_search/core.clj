@@ -321,6 +321,9 @@
 ;;; Testing two-point crossover.
 ;(two-point-crossover (random-answer knapPI_11_20_1000_4) (random-answer knapPI_11_20_1000_4) penalized-score)
 
+;;; Testing getting random point for two-point crossover.
+;(rand-int (inc (count (:choices (random-answer knapPI_11_1000_4)))))
+
 ;;; Testing crossover-GA.
 ;(crossover-GA uniform-crossover remove-then-random-replace 10 penalized-score 100 knapPI_11_1000_1000_4 10000)
 ;(crossover-GA two-point-crossover remove-then-random-replace 10 penalized-score 100 knapPI_11_1000_1000_4 10000)

@@ -1,0 +1,206 @@
+---
+title: "Population-Based_Data"
+author: "Jacob Opdahl, Mark Lehet"
+date: "3/3/2016"
+output: pdf_document
+---
+
+# Mark and Jacob's Horrific Data Mis-Adventures
+
+Fun note: we had almost all our data entirely collected, then we found a bug in our two-point crossover, so we had to get most of it again. Thus, the above title. (At least we found the bug before it was too late while documenting our design decisions!)
+
+For our data, we tested 7 different problem instances (the same problems the whole class was intended to test):
+
+* "knapPI_11_20_1000_4" 
+* "knapPI_13_20_1000_4" 
+* "knapPI_16_20_1000_4"
+* "knapPI_11_200_1000_4" 
+* "knapPI_13_200_1000_4" 
+* "knapPI_16_200_1000_4"
+* "knapPI_16_1000_1000_3"
+
+These were tested across 4 algorithms:
+
+* Random Search (The original one)
+* Mutation-Based GA
+* Two-Point Crossover GA
+* Uniform Crossover GA
+
+Documentation for these algorithms can be found here: https://github.com/lehet005/simple-search/blob/master/docs/Population-search.md
+
+As was decided to be the standard for the class, these were done using 100,000 max tries. Thus, if population sizes for algorithms are set at 100, there would be 100,000 / 100 = 1,000 generations (each generation formation is the result of 100 tweaks).
+
+For the 20 item and 200 item problems, each algorithm was run for each problem 20 times (20 replications per configuration). For the 1000 item problem, it is only run 5 times per algorithm (for the sake of time and sanity).
+
+We also decided to test some parameters that are plugged into our 3 different GAs. We wanted to see how modifying the population size and survivor-rate/tournment-size would affect the performance among our GAs. Again, for more details, see the above documentation as to what these parameters impact more specifically. Thus, our algorithms tested are more like:
+
+* Random Search (The original one)
+* Mutation-Based GA (100 population, 25 survivor-rate)
+* Mutation-Based GA (1000 population, 100 survivor-rate)
+* Two-Point Crossover GA (100 population, 25 tournament-size)
+* Two-Point Crossover GA (1000 population, 100 tournament-size)
+* Uniform Crossover GA (100 population, 25 tournament-size)
+* Uniform Crossover GA (1000 population, 100 tournament-size)
+
+```{r}
+# First, we want to import our data.
+allData = read.table(file="overallResults.txt",header=TRUE,sep=" ")
+# Check the structure to make sure it was imported properly.
+str(allData)
+# We'll want to use ggplot2.
+library("ggplot2")
+library("rpart")
+```
+
+## Overall Data with All Problems
+
+```{r}
+# Like Nic, we have negtives, so let's make a new column without negatives.
+allData$Non_negative_score = ifelse(allData$Score<0,0,allData$Score)
+# Now, we replot.
+plot(allData$Non_negative_score ~ allData$Search_method, xlab="Searcher", ylab="Score",las=2,cex.axis=.6,names=c("Mut-100,25","Mut-1000,100","Rand","2Point-100,25","2Point-1000,100","Unif-100,25","Unif-1000,100"))
+```
+
+We knew it would be fairly worthless, but we decided to quick look at all the algorithms together anyway. From this, we get the early on idea that random isn't going to stack up against our GAs. Additionally, we notice right away that two problem instances have the potential for greater output values; these are: "knapPI_16_200_1000_4", "knapPI_16_1000_1000_3". That's about all we are going to do for examining all the problems together since these greater potential values for knapsacks seem like outliers with respect to the others.
+
+## Subsets of the Data
+
+**For any portion where we exam problems with 200 or 1,000 items, we will remove random-search from consideration. We originally included it, but it never got above 0 (after accounting for negative values), which means it never gave a valid answer. Thus, to make the plots more interesting to view for our 2 Hill Climb algorithms, we will simply disregard Random Search.**
+
+### knapPI_11_20_1000_4
+
+```{r}
+# This displays the dataset with a difficulty of 11, 20 objects
+twenty_item_eleven = subset(allData, Problem=="knapPI_11_20_1000_4")
+
+ggplot(twenty_item_eleven, aes(Search_method, Non_negative_score)) + geom_boxplot() + facet_grid(. ~ Problem) +
+  theme(axis.text.x=element_text(size=6,angle=90,hjust=1,vjust=0.5))
+```
+
+With 100,000 max tries, all of our GAs and their variants reached, what we assume to be, the max value for the problem instance for all of their 20 runs. Random-Search, on the other hand, fell short a few times, but still was close to always reaching that max point we are seeing. Since we know our GAs performed the same here, and better than random, we won't do a test of significance. This doesn't provide us much in the way of information for which GA is the "best" (or if there even is a best).
+
+### knapPI_13_20_1000_4
+
+```{r}
+# This displays the dataset with a difficulty of 13, 20 objects.
+twenty_item_thirteen = subset(allData, Problem=="knapPI_13_20_1000_4")
+
+ggplot(twenty_item_thirteen, aes(Search_method, Non_negative_score)) + geom_boxplot() + facet_grid(. ~ Problem) +
+  theme(axis.text.x=element_text(size=6,angle=90,hjust=1,vjust=0.5))
+```
+
+Well, the results for this instance are pretty much the same as the previous problem. All our GAs performed the same. Random was close, but slightly worse. At this point in time, we get the feeling that going with *less* max tries might've been a better idea in order to see differences between the algorithms for these "easier" problems.
+
+### knapPI_16_20_1000_4
+
+```{r}
+# This displays the dataset with a difficulty of 16, 20 objects.
+twenty_item_sixteen = subset(allData, Problem=="knapPI_16_20_1000_4")
+
+ggplot(twenty_item_sixteen, aes(Search_method, Non_negative_score)) + geom_boxplot() + facet_grid(. ~ Problem) +
+  theme(axis.text.x=element_text(size=6,angle=90,hjust=1,vjust=0.5))
+```
+
+We start getting a little more interesting with this problem. A few things worth noting... First, the mutation GA with 100 population, 25 survivor-rate is the first GA to not hit the apparent max for all of its trials (it appears that only one fell short, and it was just barely below). Second, random-search does much more notably worse than the other algorithms this time, falling short by as much as 10% of the apparent max score in some cases. Since almost all of them are at the max again, we still won't do the pairwise-wilcox test.
+
+### knapPI_11_200_1000_4
+
+```{r}
+# This displays the dataset with a difficulty of 11, 200 objects.
+hundred_item_eleven = subset(allData, Problem=="knapPI_11_200_1000_4")
+# Remove Random Search as mentioned.
+hundred_item_eleven_no_random = subset(hundred_item_eleven,Search_method!="random_search")
+
+ggplot(hundred_item_eleven_no_random, aes(Search_method, Non_negative_score)) + geom_boxplot() + facet_grid(. ~ Problem) +
+  theme(axis.text.x=element_text(size=6,angle=90,hjust=1,vjust=0.5))
+```
+
+Annnnndddd.... We're back to boring. Enough said.
+
+### knapPI_13_200_1000_4
+
+```{r}
+# This displays the dataset with a difficulty of 13, 200 objects.
+hundred_item_thirteen = subset(allData, Problem=="knapPI_13_200_1000_4")
+# Remove Random Search as mentioned.
+hundred_item_thirteen_no_random = subset(hundred_item_thirteen,Search_method!="random_search")
+
+ggplot(hundred_item_thirteen_no_random, aes(Search_method, Non_negative_score)) + geom_boxplot() + facet_grid(. ~ Problem) +
+  theme(axis.text.x=element_text(size=6,angle=90,hjust=1,vjust=0.5))
+```
+
+At this point in time, too many evals:  confirmed.
+
+### knapPI_16_200_1000_4
+
+```{r}
+# This displays the dataset with a difficulty of 16, 200 objects.
+hundred_item_sixteen = subset(allData, Problem=="knapPI_16_200_1000_4")
+# Remove Random Search as mentioned.
+hundred_item_sixteen_no_random = subset(hundred_item_sixteen,Search_method!="random_search")
+
+ggplot(hundred_item_sixteen_no_random, aes(Search_method, Non_negative_score)) + geom_boxplot() + facet_grid(. ~ Problem) +
+  theme(axis.text.x=element_text(size=6,angle=90,hjust=1,vjust=0.5))
+```
+
+Finally, some results we can say a few things about. Here, we see our mutation-based GA is significantly out-performed by our two crossover GAs. Within mutation, the configuration differences also had a major impact. It performed much better with 1000 population, 100 survivor-rate than it did with 100 population, 25 survivor-rate. 
+
+Additionally, two-point crossover performs strongly for both configurations, but very slightly better for population 100, tournament-size 25. Uniform crossover performed better for population 1000, tournment-size 100 on the other hand, when looking at only that algorithm, and by a greater margin. Uniform and two-point, for their best configurations, both performed about the same.
+
+This time, we will take a look at the Willcox test.
+
+```{r,warning=FALSE}
+### Pairwise Wilcox Test
+pairwise.wilcox.test(hundred_item_sixteen_no_random$Non_negative_score, hundred_item_sixteen_no_random$Search_method)
+```
+
+A few things to note from this:
+* The two-point algorithm differs with the configurations, but not significantly.
+* two-point 100,25 does not differ significantly from uniform 1000,100 (the better uniform option)
+* two-point 1000,100 *almost* significantly differs from uniform 1000,100 (more trials may make this difference significant)
+* Uniform 1000,100 is significantly better than uniform 100,25 for this instance.
+
+What we can conclude from all this is: uniform crossover 1000, 100 is the "best" option given the circumstances with which the tests were run, but it is not significantly better than either configuration for the two-point crossover alternative (although, it is almost significantly better than two-point 1000, 100).
+
+### knapPI_16_1000_1000_3
+
+```{r}
+# This displays the dataset with a difficulty of 16, 1000 objects.
+thousand_item_sixteen = subset(allData, Problem=="knapPI_16_1000_1000_3")
+# Remove Random Search as mentioned.
+thousand_item_sixteen_no_random = subset(thousand_item_sixteen,Search_method!="random_search")
+
+ggplot(thousand_item_sixteen_no_random, aes(Search_method, Non_negative_score)) + geom_boxplot() + facet_grid(. ~ Problem) +
+  theme(axis.text.x=element_text(size=6,angle=90,hjust=1,vjust=0.5))
+```
+
+Time to examine the McPhee Special once again. Fortunately, this problem has some interesting results to take a look at. First, uniform, both configurations, seems to outperform the other GAs. Likewise, two-point outperforms mutation-based.
+
+Once again within mutation-based, the configurations were massively important in how the results turned out. Oddly, the better performing configuration is the opposite of the last problem instance we examined. That is, 100, 25 outperformed 1000, 100 this time. 
+
+Within two-point crossover, we see the same trend of 100, 25 outperforming 1000, 100 slightly. Although, the difference is more notable than in the last problem. 
+
+Last, within uniform crossover, it looks like 1000, 100 performed ever-so-slightly better than 100,25. This was true for the previous problem, but it was much more notable there.
+
+```{r,warning=FALSE}
+### Pairwise Wilcox Test
+#pairwise.wilcox.test(thousand_item_sixteen_no_random$Non_negative_score, thousand_item_sixteen_no_random$Search_method)
+```
+
+The pairwise wilcox test is not working for this set of data; it always return .12 for the P-Values. Given what we've seen in the previous problem though, we can conclude fairly confidently that uniform > two-point > mutation-based for this instance.
+
+## Conclusions
+
+Here are some of our main, take-away points after examining all our data:
+
+* Several of our problems saw our GAs perform exactly the same (they hit what seem to be the best answer every time for the problem instance). This mostly occurred on "easier" problems. As such, we think *too many* max tries were performed, which gave all our GAs time to reach the best solution. In order to better see the differences between the algorithms and which ones are better, we should've used less max tries.
+* It seems that Uniform 1000,100 outperforms Uniform 100,25.
+* Likewise, it seems that Two-Point 100,25 outperforms Two-Point 1000,100.
+  * For both of the previous two conclusions, *many* more tests should be performed. These tests should play with evaluations, max-tries, population-size, and tournament-size to discover if any particular configurations are consistently the best, or if it depends on the problem.
+* Ignoring configuration, it seemed like the hierarchy of our algorithms is: Uniform > Two-Point > Mutation-Based >>>> Random.
+  * This isn't a clean-cut result. Configurations do matter, so this needs to be investigated more as well. Like we said above, less max tries should also be used for testing simpler problems to see how these algorithms compare there.
+* Mutation-Based GA performs much better or worse depending upon the population-size/survivor-rate split. This seems to be problem instance dependent, but we cannot confirm without more data.
+
+**Most important conclusion:** MORE DATA NEEDED DUE TO COMPLEXITY OF PROBLEM AND ALGORITHMS!!!
+
+
